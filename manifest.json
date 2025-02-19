@@ -1,0 +1,32 @@
+{
+    "manifest_version": 3,
+    "name": "PayPal Auto Login",
+    "version": "1.0",
+    "description": "Automatically log in to PayPal",
+    "icons": {
+        "16": "images/icon16.png",
+        "48": "images/icon48.png",
+        "128": "images/icon128.png"
+    },
+    "background": {
+        "service_worker": "background.js"
+    },
+    "action": {
+        "default_popup": "popup.html"
+    },
+    "content_scripts": [{
+        "matches": ["https://www.paypal.com/*"],
+        "js": ["content.js"]
+    }],
+    "permissions": [
+        "activeTab",
+        "tabs",
+        "storage",
+        "browsingData"
+    ],
+    "host_permissions": [
+        "https://script.google.com/*",
+        "https://script.googleusercontent.com/*",
+        "https://www.paypal.com/*"
+    ]
+}

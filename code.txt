@@ -1,0 +1,58 @@
+function doGet() {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+  var data = sheet.getDataRange().getValues();
+
+  // Lấy chỉ số hàng đã xử lý từ ô lưu trạng thái
+  var statusCell = sheet.getRange("Z1"); // Giả sử ô Z1 lưu chỉ số hàng đã xử lý
+  var lastProcessedRow = statusCell.getValue() || 1; // Lấy giá trị ô, nếu không có thì mặc định là 1
+
+  for (var i = lastProcessedRow; i < data.length; i++) {
+    if (!data[i][3]) { // Kiểm tra xem cột C có trống không
+      var username = data[i][0];
+      var password = data[i][1];
+      var url = data[i][2];
+
+      // Cập nhật ô lưu trạng thái với chỉ số hàng đã xử lý
+      statusCell.setValue(i + 1); // Cập nhật chỉ số hàng đã xử lý (tăng 1 để lần sau tiếp tục từ hàng tiếp theo)
+
+      var response = {
+        username: username,
+        password: password,
+        url: url,
+        row: i + 1
+      };
+
+      // CORS headers - Need to handle this on the client-side
+      return ContentService.createTextOutput(JSON.stringify(response))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  }
+
+  // Nếu không còn hàng nào trống, quay lại từ đầu
+  statusCell.setValue(1); // Đặt lại chỉ số hàng đã xử lý về 1
+
+  return ContentService.createTextOutput(JSON.stringify({ error: "Không còn hàng nào trống ở cột C. Quay lại từ đầu." }))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doPost(e) {
+  try {
+    var postData = JSON.parse(e.postData.contents);
+    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+
+    if (postData.row && postData.status) {
+      sheet.getRange("D" + postData.row).setValue(postData.status); // Update status in column D
+      Logger.log('Cập nhật hàng ' + postData.row + ' với trạng thái ' + postData.status);
+
+      return ContentService.createTextOutput(JSON.stringify({ success: true }))
+        .setMimeType(ContentService.MimeType.JSON);
+    } else {
+      return ContentService.createTextOutput(JSON.stringify({ error: "Dữ liệu không hợp lệ" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+  } catch (error) {
+    Logger.log('Lỗi: ' + error.message);
+    return ContentService.createTextOutput(JSON.stringify({ error: "Lỗi máy chủ" }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+}
